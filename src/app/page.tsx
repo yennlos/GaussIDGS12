@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import Image from "next/image";
 import { useState } from "react";
@@ -49,8 +50,9 @@ export default function Home() {
     if (!solutions || currentStep >= solutions.steps.length) return;
 
     const newStep: UserStep = {
-      operation: solutions.steps[currentStep].description,
+      stepNumber: currentStepToValidate, // Usa el número de paso correcto
       matrix: matrix.map((row) => [...row]),
+      operation: solutions.steps[currentStepToValidate].description,
     };
 
     setUserSteps([...userSteps, newStep]);
@@ -63,7 +65,7 @@ export default function Home() {
     const feedback: string[] = [];
     let allCorrect = true;
 
-    userSteps.forEach((userStep, index) => {
+    userSteps.forEach((userStep) => {
       const correctStep = solutions.steps[userStep.stepNumber];
       const isCorrect = userStep.matrix.every((row, i) =>
         row.every((val, j) => Math.abs(val - correctStep.matrix[i][j]) < 0.01)
@@ -240,7 +242,7 @@ export default function Home() {
                       {
                         stepNumber: currentStepToValidate,
                         matrix: currentUserMatrix.map((row) => [...row]),
-                        operation: ""
+                        operation: "",
                       },
                     ]);
 

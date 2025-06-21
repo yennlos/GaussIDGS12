@@ -13,11 +13,6 @@ export interface MatrixSolution {
   error?: string;
 }
 
-interface UserMatrixStep {
-  stepNumber: number;
-  matrix: number[][];
-}
-
 export const formatMatrix = (matrix: number[][]): string => {
   return matrix.map(row => {
     const coeffs = row.slice(0, -1).map(num => num.toFixed(2).padStart(6));
