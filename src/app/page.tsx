@@ -17,6 +17,7 @@ export default function Home() {
   const [currentUserMatrix, setCurrentUserMatrix] = useState<number[][]>(
     Array.from({ length: matrixSize }, () => [...Array(matrixSize + 1).fill(0)])
   );
+
   const [showMatrix, setShowMatrix] = useState(false);
   const [solutions, setSolutions] = useState<MatrixSolution | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +119,22 @@ export default function Home() {
         <ol className="list-inside list-decimal text-sm/6 mb-8 space-y-2">
           <li>Ingresa tu sistema de ecuaciones</li>
           <li>Dale clic en resolver cuando termines</li>
+          <li>Al principio notaras los resultados</li>
+          <li>
+            Tendras que recorrer al final del sitio para poder ingresar tus
+            resultados
+          </li>
+          <li>Ingresa tus resultados una fila por fila</li>
+          <li>Dale clic en resolver cuando termines</li>
+          <li>
+            Al haccerlo notaras que te marca los resultados esperados y los
+            errores de la siguiente manera Se encontraron errores ✓ Paso 1 correcto ❌ Paso 2 incorrecto
+          </li>
+          <li>
+            Para ver cuales fueron los errores verifica subiendo a sitio y en
+            casilas rojas notaras los errores por casilla{" "}
+          </li>
+          
         </ol>
 
         <button
@@ -192,10 +209,178 @@ export default function Home() {
         {solutions && (
           <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
             <h2 className="text-xl font-semibold mb-4 text-white">
-              Validación Paso a Paso
+              Proceso de Solución
             </h2>
 
-            <div className="mb-4">
+            {/* Mostrar todos los pasos */}
+            <div className="mb-6 space-y-6">
+              {solutions.steps.map((step, index) => {
+                // Verificar si este paso tiene errores
+                const userStep = userSteps.find(
+                  (us) => us.stepNumber === index
+                );
+                const hasError =
+                  userStep &&
+                  !validationResult?.isValid &&
+                  !userStep.matrix.every((row, i) =>
+                    row.every(
+                      (val, j) => Math.abs(val - step.matrix[i][j]) < 0.01
+                    )
+                  );
+
+                return (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-md ${
+                      hasError
+                        ? "bg-red-900/20 border border-red-500"
+                        : "bg-gray-700/30"
+                    }`}
+                  >
+                    <h3 className="text-lg text-white mb-2">
+                      Paso {index + 1}: {step.description}
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="mx-auto border-collapse">
+                        <tbody>
+                          {step.matrix.map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {row.map((cell, colIndex) => {
+                                const userCell =
+                                  userStep?.matrix[rowIndex]?.[colIndex];
+                                const cellHasError =
+                                  userStep && userCell !== undefined
+                                    ? Math.abs(userCell - cell) >= 0.01
+                                    : false;
+
+                                return (
+                                  <td key={colIndex} className="p-1">
+                                    <div
+                                      className={`w-16 h-10 flex items-center justify-center 
+                              ${
+                                cellHasError ? "bg-red-500/30 text-red-200" : ""
+                              }
+                              ${
+                                colIndex === matrixSize
+                                  ? "border-l-2 border-gray-500"
+                                  : ""
+                              }`}
+                                    >
+                                      {cell.toFixed(2)}
+                                    </div>
+                                    {colIndex === matrixSize - 1 && (
+                                      <span className="mx-2 text-gray-400">
+                                        |
+                                      </span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mostrar matriz del usuario si existe y hay error */}
+                    {hasError && userStep && (
+                      <div className="mt-4">
+                        <h4 className="text-sm text-red-300 mb-2">
+                          Tu respuesta:
+                        </h4>
+                        <div className="overflow-x-auto">
+                          <table className="mx-auto border-collapse">
+                            <tbody>
+                              {userStep.matrix.map((row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  {row.map((cell, colIndex) => (
+                                    <td key={colIndex} className="p-1">
+                                      <div
+                                        className={`w-16 h-10 flex items-center justify-center 
+                                ${
+                                  colIndex === matrixSize
+                                    ? "border-l-2 border-gray-500"
+                                    : ""
+                                }`}
+                                      >
+                                        {cell.toFixed(2)}
+                                      </div>
+                                      {colIndex === matrixSize - 1 && (
+                                        <span className="mx-2 text-gray-400">
+                                          |
+                                        </span>
+                                      )}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mostrar resultados finales */}
+            <div className="mt-6 p-4 bg-blue-900/20 rounded-md border border-blue-500">
+              <h3 className="text-xl font-semibold mb-2 text-white">
+                Resultados Finales
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm text-blue-300 mb-2">
+                    Solución Correcta:
+                  </h4>
+                  <ul className="space-y-1">
+                    {solutions.solutions.map((sol, idx) => (
+                      <li key={idx} className="text-white">
+                        x<sub>{idx + 1}</sub> = {sol.toFixed(4)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {userSteps.length === solutions.steps.length && (
+                  <div>
+                    <h4 className="text-sm text-blue-300 mb-2">Tu Solución:</h4>
+                    <ul className="space-y-1">
+                      {solutions.solutions.map((_, idx) => {
+                        // Calcular solución del usuario basada en su última matriz
+                        const lastUserMatrix =
+                          userSteps[userSteps.length - 1].matrix;
+                        // Implementar aquí el cálculo de la solución del usuario
+                        // Esto es un placeholder - necesitarías implementar la lógica real
+                        const userSol = solutions.solutions[idx]; // Reemplazar con cálculo real
+                        const isCorrect =
+                          Math.abs(userSol - solutions.solutions[idx]) < 0.01;
+
+                        return (
+                          <li
+                            key={idx}
+                            className={
+                              isCorrect ? "text-white" : "text-red-300"
+                            }
+                          >
+                            x<sub>{idx + 1}</sub> = {userSol.toFixed(4)}
+                            {!isCorrect && (
+                              <span className="ml-2 text-xs text-red-300">
+                                (Correcto: {solutions.solutions[idx].toFixed(4)}
+                                )
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mostrar todos los pasos */}
+            <div className="mt-6">
               <h3 className="text-lg text-white mb-2">
                 Paso {currentStepToValidate + 1} de {solutions.steps.length}
               </h3>
@@ -236,13 +421,13 @@ export default function Home() {
               <div className="flex gap-4">
                 <button
                   onClick={() => {
-                    // Agregar el paso actual a la lista de pasos del usuario
                     setUserSteps([
                       ...userSteps,
                       {
                         stepNumber: currentStepToValidate,
                         matrix: currentUserMatrix.map((row) => [...row]),
-                        operation: "",
+                        operation:
+                          solutions.steps[currentStepToValidate].description,
                       },
                     ]);
 
